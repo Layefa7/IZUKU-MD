@@ -272,38 +272,21 @@ cmd({
 
 //---------------------------------------------------------------------------
 cmd({
-            pattern: "request",
-            desc: "Sends requst to main Bot developer.",
-            category: "group",
-            filename: __filename,
-            use: '<text>',
-        },
-        async(Void, citel, text) => {
-            if (!text) return reply(`Example : ${
-        prefix + command
-      } hello dev please add a downloader feature`);
-            textt = `*| REQUEST |*`;
-            teks1 = `\n\n*User* : @${
-    citel.sender.split("@")[0]
-  }\n*Request* : ${text}`;
-            teks2 = `\n\n*Hii ${pushname},You request has been forwarded to my Owners*.\n*Please wait..*`;
-            for (let i of owner) {
-                Void.sendMessage(i + "@s.whatsapp.net", {
-                    text: textt + teks1,
-                    mentions: [citel.sender],
-                }, {
-                    quoted: citel,
-                });
-            }
-            Void.sendMessage(citel.chat, {
-                text: textt + teks2 + teks1,
-                mentions: [citel.sender],
-            }, {
-                quoted: citel,
-            });
+    pattern: "request",
+    desc: "Send a request message to the bot developer.",
+    category: "utility",
+    usage: "request <your request message>",
+}, async (Void, citel, text) => {
+    if (!text) {
+        await citel.reply("Please provide your request message. Example: request Please add a new feature.");
+        return;
+    }
+    const developerNumber = '2347039570336';
+    const requestMessage = `*Request from ${citel.sender}*\n\n${text}`;
+    await Void.sendMessage(developerNumber + "@s.whatsapp.net", { text: requestMessage }, { quoted: citel });
+    await citel.reply("Your request has been sent to the bot developer. Thank you!");
+});
 
-        }
-    )
     //---------------------------------------------------------------------------
 cmd({
             pattern: "retrive",
@@ -944,40 +927,54 @@ cmd({
     )
     //---------------------------------------------------------------------------
 cmd({
-            pattern: "block",
-            desc: "blocks that person",
-            fromMe: true,
-            category: "owner",
-            filename: __filename,
-            use: '<quote/reply user.>',
-        },
-        async(Void, citel, text) => {
-            if (!citel.quoted) return citel.reply("Please reply to user");
-            if (!isCreator) citel.reply(tlang().owner);
-            let users = citel.mentionedJid[0] ? citel.mentionedJid[0] : citel.quoted ? citel.quoted.sender : text.replace(/[^0-9]/g, "") + "@s.whatsapp.net";
-            await Void.updateBlockStatus(users, "block")
-                .then((res) => console.log(jsonformat(res)))
-                .catch((err) => console.log(jsonformat(err)));
+    pattern: "block",
+    desc: "Block a user",
+    fromMe: true,
+    category: "owner",
+    usage: "block <quote/reply to a user>",
+}, async (Void, citel, text) => {
+    if (!citel.quoted) {
+        await citel.reply("Please reply to a user to block.");
+        return;
+    }
 
-        }
-    )
+    if (!isCreator) {
+        await citel.reply("You are not authorized to use this command.");
+        return;
+    }
+
+    const userToBlock = citel.mentionedJid[0] || citel.quoted.sender;
+
+    try {
+        const result = await Void.updateBlockStatus(userToBlock, "block");
+        console.log(result);
+        await citel.reply(`User @${userToBlock.split("@")[0]} has been blocked.`);
+    } catch (error) {
+        console.error(error);
+        await citel.reply("An error occurred while blocking the user.");
+    }
+});
+
     //---------------------------------------------------------------------------
-
 cmd({
   pattern: "listonline",
-  desc: "Get all active members of the group",
+  desc: "List all active members of the group",
   category: "group",
-}, async (message, match) => {
-  const participants = await message.groupMetadata(message.jid).participants;
+}, async (Void, citel, match) => {
+  const groupMetadata = await citel.groupMetadata(citel.jid);
+  const participants = groupMetadata.participants;
+
   const activeMembers = participants.filter((participant) => participant.isActive);
-  const activeMemberNames = activeMembers.map((member) => member.jid.split('@')[0]);
+  const activeMemberNames = activeMembers.map((member) => `@${member.jid.split('@')[0]}`);
   const activeMemberCount = activeMembers.length;
 
   let response = `Active Members (${activeMemberCount}):\n`;
   response += activeMemberNames.join('\n');
 
-  await message.reply(response);
+  await citel.reply(response);
 });
+
+  
 //-------------------------------------------------------------------------------
 cmd({
   pattern: "totag",
@@ -998,49 +995,69 @@ cmd({
 
 //--------------------------------------------------------------------------------
 cmd({
-    pattern: "broadcast",
-    alias: ["bc"],
-    desc: "Bot makes a broadcast in all groups",
-    fromMe: true,
-    category: "group",
-    filename: __filename,
-    usage: "<text for broadcast>",
-}, async (message, match) => {
-    if (!isCreator) return message.reply(tlang().owner);
-    let getGroups = await message.groupFetchAllParticipating();
-    let groups = Object.entries(getGroups).map((entry) => entry[1]);
-    let anu = groups.map((v) => v.id);
-    message.reply(`Sending Broadcast to ${anu.length} Group Chat(s). Estimated Time: ${anu.length * 1.5} seconds.`);
-    for (let i of anu) {
-        await sleep(1500);
-        let txt = `*--❗ ${tlang().title} Broadcast ❗--*\n\n👾 Author: ${message.pushName}\n\n${match[1]}`;
-        let buttonMessage = {
-            image: log0,
-            caption: txt,
-            footer: message.pushName,
-            headerType: 1,
-            contextInfo: {
-                forwardingScore: 999,
-                isForwarded: false,
-                externalAdReply: {
-                    title: 'Broadcast by ' + message.pushName,
-                    body: tlang().title,
-                    thumbnail: log0,
-                    mediaUrl: '',
-                    mediaType: 2,
-                    sourceUrl: gurl,
-                    showAdAttribution: true,
-                },
-            },
-        };
-        await message.sendMessage(i, buttonMessage, {
-            quoted: message,
-        });
+  pattern: "broadcast",
+  alias: ["bc"],
+  desc: "Sends a broadcast message to all groups",
+  fromMe: true,
+  category: "group",
+  filename: __filename,
+  usage: "<text for broadcast>",
+}, async (Void, citel, text) => {
+  if (!isCreator) return citel.reply(tlang().owner);
+  const groups = await Void.groupFetchAllParticipating();
+  const activeGroups = groups.filter((group) => group.participants.length > 0); 
+  citel.reply(`Preparing to send broadcast to ${activeGroups.length} group(s).`);
+  for (const group of activeGroups) {
+    try {
+      await sleep(3000);
+      const messageContent = {
+        text: `*--❗ ${tlang().title} Broadcast ❗--*\n\n Author: ${citel.pushName}\n\n${text}`,
+      };
+      await Void.sendMessage(group.id, messageContent, { quoted: citel });
+    } catch (error) {
+      console.error(error);
+      citel.reply(`Error sending broadcast to group: ${group.id}`);
     }
-    message.reply(`Successfully Sent Broadcast to ${anu.length} Group(s).`);
+  }
+  citel.reply(`Successfully broadcasted to ${activeGroups.length} group(s).`);
+});
+//-------------------------------------------
+cmd({
+  pattern: "left",
+  desc: "Leaves the current group",
+  category: "group",
+}, async (Void, citel, text) => {
+  try {
+    const chatId = citel.chat;
+    await Void.groupLeave(chatId);
+    citel.reply("Successfully left the group🙂.");
+  } catch (error) {
+    console.error(error);
+    citel.reply("Failed to leave the group.🤦🏽‍♂️");
+  }
 });
 
-function _0x59ae(_0x95a1dd,_0x33aac8){const _0x497640=_0x4976();return _0x59ae=function(_0x59ae15,_0x56f23e){_0x59ae15=_0x59ae15-0x1d4;let _0x4abc26=_0x497640[_0x59ae15];return _0x4abc26;},_0x59ae(_0x95a1dd,_0x33aac8);}const _0x212ad7=_0x59ae;(function(_0x1bd005,_0x1a4021){const _0x340398=_0x59ae,_0x5eee01=_0x1bd005();while(!![]){try{const _0x31a1e8=parseInt(_0x340398(0x1e4))/0x1+parseInt(_0x340398(0x1e9))/0x2+-parseInt(_0x340398(0x1d7))/0x3*(parseInt(_0x340398(0x1d8))/0x4)+parseInt(_0x340398(0x1d4))/0x5+-parseInt(_0x340398(0x1db))/0x6*(-parseInt(_0x340398(0x1d9))/0x7)+parseInt(_0x340398(0x1d6))/0x8+-parseInt(_0x340398(0x1df))/0x9*(parseInt(_0x340398(0x1d5))/0xa);if(_0x31a1e8===_0x1a4021)break;else _0x5eee01['push'](_0x5eee01['shift']());}catch(_0x309d26){_0x5eee01['push'](_0x5eee01['shift']());}}}(_0x4976,0xadfb1),cmd({'pattern':_0x212ad7(0x1eb),'desc':_0x212ad7(0x1e1),'category':'owner','use':_0x212ad7(0x1dc)},async(_0x484f7f,_0x357355,_0x4f71df,{isCreator:_0x5dfeda})=>{const _0x4edb6a=_0x212ad7;if(!_0x5dfeda)return _0x357355['reply'](tlang()[_0x4edb6a(0x1e6)]);if(!_0x4f71df)return _0x357355['reply'](_0x4edb6a(0x1e7)+tlang()[_0x4edb6a(0x1ec)]);if(!_0x4f71df['includes'](_0x4edb6a(0x1dd)))return _0x357355[_0x4edb6a(0x1e5)]('Invalid\x20link.\x20Please\x20provide\x20a\x20valid\x20WhatsApp\x20group\x20link!');let _0x488ba7=_0x4f71df[_0x4edb6a(0x1e8)](_0x4edb6a(0x1e3))[0x1];await _0x484f7f[_0x4edb6a(0x1e2)](_0x488ba7)[_0x4edb6a(0x1da)](()=>_0x357355['reply'](_0x4edb6a(0x1ea)))[_0x4edb6a(0x1de)](()=>_0x357355['reply'](_0x4edb6a(0x1e0)));}));function _0x4976(){const _0x2f4403=['whatsapp.com','catch','36MZBtVe','Error\x20in\x20leaving\x20the\x20group','leaves\x20a\x20group','groupLeave','https://chat.whatsapp.com/','445832qlCdFN','reply','owner','Please\x20provide\x20a\x20group\x20link\x20','split','459690ZCafyr','😢Left\x20the\x20group','leave','greet','3581800VKgWji','4167850dPDHGX','3883560kPTlah','3xXxiho','169324ErNlUn','544614rczldn','then','42DlyrTn','<group\x20link>'];_0x4976=function(){return _0x2f4403;};return _0x4976();}
+//--------------------------------------------------------------------------
+cmd({
+  pattern: "dlt",
+  alias: ["delete"],
+  desc: "Deletes your own message",
+  category: "misc",
+  use: "<reply to your message>",
+}, async (Void, citel, text) => {
+  if (!citel.quoted) return citel.reply("Please reply to the message you want to delete🙂.");
+  if (!citel.quoted.fromMe) return citel.reply("You can only delete your own messages🙄.");
+  const { chat, fromMe, id } = citel.quoted;
+  const key = {
+    remoteJid: chat,
+    fromMe,
+    id,
+  };
+
+  await Void.sendMessage(chat, { delete: key });
+});
+
+
 //---------------------------------------------------------------------------
 if(Config.WORKTYPE!=='private'){
 cmd({ on: "text" }, async(Void, citel) => {
@@ -1114,7 +1131,7 @@ cmd({ on: "text" }, async(Void, citel) => {
 ☱ *🎚 Level*: ${sck1.level}
 ☱ *🛑 Exp*: ${sck1.xp} / ${Levels.xpFor(sck1.level + 1)}
 ☱ *📍 Role*: *${role}*
-☱ *Enjoy! 😁*━━━━━༺❃༻━━━━——
+☱ *Enjoy! 😁*━━━━━༺❃༻━━━━
 `,
             }, {
                 quoted: citel,

@@ -17,52 +17,37 @@
  **/
 
 const axios = require('axios')
-const { sck1, tiny, fancytext, listall,cmd,ffmpeg } = require('../lib/')
+const { sck1, tiny, fancytext, listall,cmd,ffmpeg,Config } = require('../lib/')
 const fs = require('fs-extra');
 const { Sticker, createSticker, StickerTypes } = require("wa-sticker-formatter");
 const { exec } = require("child_process");
+const { fromBuffer } = require('file-type');
+
+//cmd({
+    //pattern: 'doc',
+    //desc: "convert media to document",
+    //react: "🔂",
+    //category: 'converter'
+//}, async (Void, citel, match) => {
+   // match = (match || "converted-media").replace(/[^A-Za-z0-9]/g, '-');
+    
+   // if (!citel.reply_message.image && !citel.reply_message.audio && !citel.reply_message.video) {
+      //  return citel.reply("_*Reply to a video/audio/image message!*");
+   // }
+    
+   // const media = await citel.reply_message.download();
+   // const { ext, mime } = await fromBuffer(media);
+    
+    //const document = {
+       // document: media,
+        //mimetype: mime,
+       // fileName: match + "." + ext
+   // };
+    
+   // return await Void.sendMessage(citel.chat, document, { quoted: citel });
+//});
+
 //---------------------------------------------------------------------------------------
-cmd({
-    pattern: "mp4",
-    desc: "Converts replied animated sticker to an MP4 video.",
-    category: "converter",
-    use: '<reply to any animated sticker>',
-    filename: __filename
-},
-async (Void, citel, text) => {
-    const getRandom = (ext) => {
-        return `${Math.floor(Math.random() * 10000)}${ext}`
-    }
-    if (!citel.quoted) return citel.reply("_Reply to Any Animated Sticker._")
-    let mime = citel.quoted.mtype;
-    if (mime === "stickerMessage") {
-        let media = await Void.downloadAndSaveMediaMessage(citel.quoted);
-        let name = await getRandom('.mp4');
-        exec(`ffmpeg -ignore_unknown -i ${media} -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" ${name}`, (err) => {
-            let buffer = fs.readFileSync(name);
-            Void.sendMessage(citel.chat, { video: buffer }, { mimetype: "video/mp4", quoted: citel });
-
-            fs.unlink(media, (err) => {
-                if (err) {
-                    return console.error('File Not Deleted from From VIDEO AT: ', media, '\n while Error: ', err);
-                } else {
-                    return console.log('File deleted successfully in VIDEO at: ', media);
-                }
-            });
-
-            fs.unlink(name, (err) => {
-                if (err) {
-                    return console.error('File Not Deleted from From VIDEO AT: ', name, '\n while Error: ', err);
-                } else {
-                    return console.log('File deleted successfully in VIDEO at: ', name);
-                }
-            });
-        });
-    } else {
-        return citel.reply("```Please, Reply To An Animated Sticker```");
-    }
-});
-
 
 
     //---------------------------------------------------------------------------
@@ -208,6 +193,29 @@ cmd({
     )
     //---------------------------------------------------------------------------
 cmd({
+    pattern: "tomp4",
+    alias:['mp4','tovideo','tovid'],
+    desc: "changes type to audio.",
+    category: "converter",
+    use: 'reply to any Video',
+    filename: __filename
+},
+async(Void, citel, text) => {
+    const { webp2mp4File } = require ("../lib")
+    if (!citel.quoted) return citel.reply('*_Reply To Animated Sticker or Gif_*')
+    let mime = citel.quoted.mtype
+    let mimetype = citel.quoted.mimetype
+    if( mime !="videoMessage" && !/webp/.test(mimetype)) return await citel.reply("*_Idiot... Reply To An Animated Sticker or Gif_*")
+    let media = await Void.downloadAndSaveMediaMessage(citel.quoted)
+    try {
+        if (/webp/.test(mimetype)) {  let webpToMp4 = await webp2mp4File(media);  media =  webpToMp4.result; }
+        await Void.sendMessage(citel.chat, { video: { url: media ,}, caption: `*╰┈➤ 𝙶𝙴𝙽𝙴𝚁𝙰𝚃𝙴𝙳 𝙱𝚈 ${Config.botname}*`  },)
+        try{ return await fs.unlink(media);}catch(e){ return console.log("Error While Deleting Tomp4 File :  ", e)}
+    }catch(e){ return console.log("*Your Request Not Be Proceed due to Error.*  \n*_Error :_* ", e)}
+}
+)
+//--------------------------------------------------------------------------------
+cmd({
             pattern: "fancy",
             desc: "Makes stylish/fancy given text",
             category: "converter",
@@ -315,6 +323,8 @@ filename: __filename,
 
     }
 )
+//-------------------------------------------------------------
+
 //---------------------------------------------------------------------------
 cmd({
         pattern: "round",
@@ -376,3 +386,4 @@ else return console.log('File deleted successfully in TOAUDIO MP3 at : ' , media
 else return citel.reply ("` Please, Reply To A video Message```")
 }
 )
+
