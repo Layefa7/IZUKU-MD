@@ -1,7 +1,7 @@
 </p>
 <p align="center">
   <a href="https://chat.whatsapp.com/BEhEne7RdGBC3y5vYltuxL">
-    <img alt=Support height="400" src="https://telegra.ph/file/be4fad9b026c96936cbfe.jpg"> 
+    <img alt=Support height="400" src="https://telegra.ph/file/1b391485b560f9a2eebb5.jpg"> 
     </p>
 <h1 align="center"> 𝙸𝚉𝚄𝙺𝚄-𝙼𝙳 𝙼𝚄𝙻𝚃𝙸 𝙳𝙴𝚅𝙸𝙲𝙴 𝙱𝙾𝚃
 </h1>
@@ -33,7 +33,7 @@
 ---
 # ```Scan QR Code```
 
-1. ***Get [SESSION-ID](https://izukuweb-f02f26af2537.herokuapp.com) by scanning QR code. OR USE THIS  [SESSION-ID-2](https://www.izuku.rf.gd)`Whatapp>Three dots>Linked Devices`***
+1. ***Get [SESSION-ID](https://izuku-web.onrender.com/) by scanning QR code.***
 --- 
 # ```Fork Repo```
 2. ***Click [FORK](https://github.com/excelottah6/IZUKU-MD/fork)***
@@ -96,7 +96,7 @@
 </p>
 
 <p align="center" >
-    <a href="https://heroku.com/deploy?template=https://github.com/excelottah6/IZUKU-MD">
+    <a href="https://dashboard.heroku.com/new?button-url=https%3A%2F%2Fizuku-web.onrender.com%2F&template=https%3A%2F%2Fgithub.com%2Fexcelottah6%2FIZUKU-MD">
     <img src="https://www.herokucdn.com/deploy/button.png" width="170px" alt="Deploy on Heroku" >
     </a>
 

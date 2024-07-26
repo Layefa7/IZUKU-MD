@@ -14,6 +14,7 @@ const {fetchJson,cmd, tlang } = require('../lib')
 let gis = require("async-g-i-s");
 const axios = require('axios')
 const fetch = require('node-fetch')
+const { Config, prefix } = require('../lib')
 
     //---------------------------------------------------------------------------
 cmd({
@@ -237,3 +238,45 @@ cmd({
 
     }
 )
+
+cmd({
+  pattern: "lyrics",
+  desc: "Fetch song lyrics",
+  category: "search",
+  filename: __filename
+},
+async (Void, citel, match) => {
+  try {
+    let songName = match.trim();
+    if (!songName) {
+      return citel.reply('Please provide a song name to fetch the lyrics.');
+    }
+
+    let apiUrl = `https://api.popcat.xyz/lyrics?song=${encodeURIComponent(songName)}`;
+    let response = await axios.get(apiUrl);
+    let data = response.data;
+
+    if (data && data.lyrics) {
+      let { title, image, artist, lyrics } = data;
+
+      await Void.sendMessage(citel.chat, {
+        text: `*Title:* ${title}\n*Artist:* ${artist}\n\n${lyrics}`,
+        contextInfo: {
+          externalAdReply: {
+            title: title,
+            body: `Artist: ${artist}\nPowered by IZUKU-MD`,
+            renderLargerThumbnail: true,
+            thumbnailUrl: image,
+            mediaType: 1,
+            mediaUrl: image,
+            sourceUrl: image
+          }
+        }
+      });
+    } else {
+      await Void.sendMessage(citel.chat, { text: '*No lyrics found.*', options: { isBold: true } });
+    }
+  } catch (error) {
+    await Void.sendMessage(citel.chat, { text: `*An error occurred:* ${error.message || error}`, options: { isBold: true } });
+  }
+});

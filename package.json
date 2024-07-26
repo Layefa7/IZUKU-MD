@@ -3,6 +3,10 @@
   "version": "0.0.7",
   "description": "Multi device whatsapp bot by excelottah6.",
   "main": "lib/client.js",
+    "engines" : { 
+    "npm" : ">=9.7.2",
+    "node" : ">=20.0.0"
+    },
   "type": "commonjs",
   "license": "GPL-3.0",
   "scripts": {
@@ -59,6 +63,7 @@
     "simple-git": "^3.16.1",
     "soundcloud-downloader": "^1.0.0",
     "tiktok-scraper": "^1.4.36",
+    "ytdl-core": "^4.11.5",
     "translatte": "^3.0.1",
     "util": "^0.12.4",
     "vz-tiktok-downloader": "^2.2.5",
